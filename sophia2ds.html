@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meu Dia - To Do Avançado (Roxo)</title>
+    
+    <style>
+        /* =========================================
+           VARIÁVEIS E RESET - TEMA ROXO
+           ========================================= */
+        :root {
+            /* Cores alteradas para roxo */
+            --primary-color: #7e57c2; /* Roxo vibrante */
+            --bg-body: #f3f2f1;
+            --bg-surface: #ffffff;
+            --text-main: #201f1e;
+            --text-muted: #605e5c;
+            --border-color: #edebe9;
+            --danger-color: #e53935; /* Vermelho mais suave */
+            --warning-color: #fb8c00; /* Laranja */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--bg-surface);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            min-height: 100vh;
+        }
+
+        /* =========================================
+           CABEÇALHO - GRADIENTE ROXO
+           ========================================= */
+        header {
+            background-image: linear-gradient(135deg, #7e57c2, #5c6bc0); /* Gradiente Roxo para Índigo */
+            color: white;
+            padding: 40px 24px 20px 24px;
+        }
+
+        header h1 { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+        header p { font-size: 14px; opacity: 0.9; }
+
+        /* =========================================
+           ÁREA DE INPUT
+           ========================================= */
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            border: none;
+            font-size: 16px;
+            padding: 12px 8px;
+            outline: none;
+            background: transparent;
+        }
+
+        .datetime-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        .datetime-row input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-main);
+            outline: none;
+            background-color: var(--bg-body);
+            min-height: 48px; /* Touch friendly */
+        }
+
+        .btn-add {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 48px;
+            margin-left: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-add:active { background-color: #5c6bc0; } /* Roxo mais escuro no toque */
+
+        /* =========================================
+           LISTA DE TAREFAS
+           ========================================= */
+        .task-list {
+            list-style: none;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 40px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            min-height: 72px;
+        }
+
+        .btn-check {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            min-width: 48px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+        }
+
+        .circle {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--text-muted);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 48px;
+            padding-right: 12px;
+        }
+
+        .task-text { font-size: 16px; word-break: break-word; }
+
+        /* Metadados (Data e Hora na lista) */
+        .task-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--primary-color); /* Roxo */
+            margin-top: 6px;
+            font-weight: 500;
+        }
+        
+        .task-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-delete {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            min-width: 48px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        /* Tarefa Concluída */
+        .task-item.completed .circle {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .task-item.completed .circle::after {
+            content: '✓'; color: white; font-size: 14px; font-weight: bold;
+        }
+        .task-item.completed .task-text { text-decoration: line-through; color: var(--text-muted); }
+        .task-item.completed .task-meta { color: var(--text-muted); text-decoration: line-through; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Meu Dia</h1>
+            <p id="date-display">Carregando data...</p>
+        </header>
+
+        <!-- Área de Input -->
+        <div class="input-section">
+            <div class="input-row">
+                <input type="text" id="task-input" placeholder="O que você precisa fazer?">
+                <button id="add-btn" class="btn-add">Adicionar</button>
+            </div>
+            <div class="datetime-row">
+                <input type="date" id="task-date" aria-label="Data da tarefa">
+                <input type="time" id="task-time" aria-label="Hora da tarefa">
+            </div>
+        </div>
+
+        <ul id="task-list" class="task-list"></ul>
+    </div>
+
+    <script>
+        // DOM Elements
+        const taskInput = document.getElementById('task-input');
+        const taskDate = document.getElementById('task-date');
+        const taskTime = document.getElementById('task-time');
+        const addBtn = document.getElementById('add-btn');
+        const taskList = document.getElementById('task-list');
+        const dateDisplay = document.getElementById('date-display');
+
+        // Pede permissão para enviar notificações (Lembretes)
+        if ("Notification" in window && Notification.permission !== "denied" && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+
+        // Configura a data atual no cabeçalho
+        const updateHeaderDate = () => {
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const today = new Date().toLocaleDateString('pt-BR', options);
+            dateDisplay.textContent = today.charAt(0).toUpperCase() + today.slice(1);
+        };
+        updateHeaderDate();
+
+        // Configura a data de hoje como padrão nos inputs
+        const setInputsToNow = () => {
+            const now = new Date();
+            taskDate.value = now.toISOString().split('T')[0];
+            taskTime.value = ""; 
+        };
+        setInputsToNow();
+
+        // Estado das tarefas - Chave atualizada para o tema roxo
+        let tasks = JSON.parse(localStorage.getItem('ms_todo_tasks_purple_v2')) || [];
+
+        const saveAndRender = () => {
+            localStorage.setItem('ms_todo_tasks_purple_v2', JSON.stringify(tasks));
+            renderTasks();
+        };
+
+        const addTask = () => {
+            const text = taskInput.value.trim();
+            if (text === '') return;
+
+            const newTask = {
+                id: Date.now().toString(),
+                text: text,
+                date: taskDate.value,
+                time: taskTime.value,
+                completed: false,
+                notified: false 
+            };
+
+            tasks.push(newTask);
+            taskInput.value = '';
+            setInputsToNow(); 
+            taskInput.focus();
+            
+            if (newTask.time && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+            
+            saveAndRender();
+        };
+
+        const toggleTask = (id) => {
+            tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task);
+            saveAndRender();
+        };
+
+        const deleteTask = (id) => {
+            tasks = tasks.filter(task => task.id !== id);
+            saveAndRender();
+        };
+
+        const formatarDataBR = (dataISO) => {
+            if (!dataISO) return '';
+            const [ano, mes, dia] = dataISO.split('-');
+            return `${dia}/${mes}`;
+        };
+
+        const renderTasks = () => {
+            taskList.innerHTML = '';
+
+            const sortedTasks = tasks.sort((a, b) => {
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                const dateA = new Date(`${a.date || '9999-12-31'}T${a.time || '23:59'}`);
+                const dateB = new Date(`${b.date || '9999-12-31'}T${b.time || '23:59'}`);
+                return dateA - dateB;
+            });
+
+            sortedTasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `task-item ${task.completed ? 'completed' : ''}`;
+                
+                let metaHTML = '';
+                if (task.date || task.time) {
+                    metaHTML = `<div class="task-meta">`;
+                    if (task.date) {
+                        metaHTML += `<span>📅 ${formatarDataBR(task.date)}</span>`;
+                    }
+                    if (task.time) {
+                        metaHTML += `<span>⏰ ${task.time}</span>`;
+                    }
+                    metaHTML += `</div>`;
+                }
+
+                li.innerHTML = `
+                    <button class="btn-check" onclick="toggleTask('${task.id}')">
+                        <div class="circle"></div>
+                    </button>
+                    
+                    <div class="task-content">
+                        <span class="task-text">${task.text}</span>
+                        ${metaHTML}
+                    </div>
+                    
+                    <button class="btn-delete" onclick="deleteTask('${task.id}')">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                    </button>
+                `;
+                taskList.appendChild(li);
+            });
+        };
+
+        // MOTOR DE LEMBRETES (A cada 30 segundos)
+        setInterval(() => {
+            const now = new Date();
+            const currentDate = now.toISOString().split('T')[0];
+            const currentTime = now.toTimeString().substring(0, 5);
+
+            let needsSave = false;
+
+            tasks.forEach(task => {
+                if (!task.completed && task.date === currentDate && task.time === currentTime && !task.notified) {
+                    
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        new Notification("Lembrete (Roxo): " + task.text, {
+                            body: "Está na hora da sua tarefa!",
+                            icon: "https://cdn-icons-png.flaticon.com/512/825/825590.png"
+                        });
+                    } else {
+                        alert("⏰ Lembrete de Tarefa:\n\n" + task.text);
+                    }
+
+                    task.notified = true; 
+                    needsSave = true;
+                }
+            });
+
+            if (needsSave) {
+                // Salva com a nova chave roxa
+                localStorage.setItem('ms_todo_tasks_purple_v2', JSON.stringify(tasks));
+            }
+        }, 30000); 
+
+        // Gatilhos
+        addBtn.addEventListener('click', addTask);
+        taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+
+        renderTasks();
+    </script>
+</body>
+</html>
