@@ -10,15 +10,14 @@
            VARIÁVEIS E RESET - TEMA ROXO
            ========================================= */
         :root {
-            /* Cores alteradas para roxo */
-            --primary-color: #7e57c2; /* Roxo vibrante */
+            --primary-color: #7e57c2;
             --bg-body: #f3f2f1;
             --bg-surface: #ffffff;
             --text-main: #201f1e;
             --text-muted: #605e5c;
             --border-color: #edebe9;
-            --danger-color: #e53935; /* Vermelho mais suave */
-            --warning-color: #fb8c00; /* Laranja */
+            --danger-color: #e53935;
+            --warning-color: #fb8c00;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
@@ -42,10 +41,10 @@
         }
 
         /* =========================================
-           CABEÇALHO - GRADIENTE ROXO
+           CABEÇALHO
            ========================================= */
         header {
-            background-image: linear-gradient(135deg, #7e57c2, #5c6bc0); /* Gradiente Roxo para Índigo */
+            background-image: linear-gradient(135deg, #7e57c2, #5c6bc0);
             color: white;
             padding: 40px 24px 20px 24px;
         }
@@ -98,7 +97,7 @@
             color: var(--text-main);
             outline: none;
             background-color: var(--bg-body);
-            min-height: 48px; /* Touch friendly */
+            min-height: 48px;
         }
 
         .btn-add {
@@ -115,7 +114,7 @@
             transition: background 0.2s;
         }
 
-        .btn-add:active { background-color: #5c6bc0; } /* Roxo mais escuro no toque */
+        .btn-add:active { background-color: #5c6bc0; }
 
         /* =========================================
            LISTA DE TAREFAS
@@ -168,12 +167,11 @@
 
         .task-text { font-size: 16px; word-break: break-word; }
 
-        /* Metadados (Data e Hora na lista) */
         .task-meta {
             display: flex;
             gap: 12px;
             font-size: 12px;
-            color: var(--primary-color); /* Roxo */
+            color: var(--primary-color);
             margin-top: 6px;
             font-weight: 500;
         }
@@ -197,7 +195,6 @@
             border-radius: 4px;
         }
 
-        /* Tarefa Concluída */
         .task-item.completed .circle {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
@@ -218,7 +215,6 @@
             <p id="date-display">Carregando data...</p>
         </header>
 
-        <!-- Área de Input -->
         <div class="input-section">
             <div class="input-row">
                 <input type="text" id="task-input" placeholder="O que você precisa fazer?">
@@ -242,36 +238,56 @@
         const taskList = document.getElementById('task-list');
         const dateDisplay = document.getElementById('date-display');
 
-        // Pede permissão para enviar notificações (Lembretes)
-        if ("Notification" in window && Notification.permission !== "denied" && Notification.permission !== "granted") {
-            Notification.requestPermission();
+        // Função segura para verificar se o navegador suporta notificações
+        function supportsNotification() {
+            return "Notification" in window && window.Notification !== undefined;
         }
 
-        // Configura a data atual no cabeçalho
-        const updateHeaderDate = () => {
+        if (supportsNotification() && Notification.permission !== "denied" && Notification.permission !== "granted") {
+            try { Notification.requestPermission(); } catch(e) {}
+        }
+
+        function updateHeaderDate() {
             const options = { weekday: 'long', month: 'long', day: 'numeric' };
             const today = new Date().toLocaleDateString('pt-BR', options);
             dateDisplay.textContent = today.charAt(0).toUpperCase() + today.slice(1);
-        };
+        }
         updateHeaderDate();
 
-        // Configura a data de hoje como padrão nos inputs
-        const setInputsToNow = () => {
+        function setInputsToNow() {
             const now = new Date();
-            taskDate.value = now.toISOString().split('T')[0];
+            // Evita erro de fuso horário no toISOString
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            
+            taskDate.value = `${year}-${month}-${day}`;
             taskTime.value = ""; 
-        };
+        }
         setInputsToNow();
 
-        // Estado das tarefas - Chave atualizada para o tema roxo
-        let tasks = JSON.parse(localStorage.getItem('ms_todo_tasks_purple_v2')) || [];
+        // Carrega as tarefas
+        let tasks = [];
+        try {
+            const savedTasks = localStorage.getItem('ms_todo_tasks_purple_v2');
+            if (savedTasks) {
+                tasks = JSON.parse(savedTasks);
+            }
+        } catch (e) {
+            console.error("Erro ao ler as tarefas salvas", e);
+        }
 
-        const saveAndRender = () => {
-            localStorage.setItem('ms_todo_tasks_purple_v2', JSON.stringify(tasks));
+        function saveAndRender() {
+            try {
+                localStorage.setItem('ms_todo_tasks_purple_v2', JSON.stringify(tasks));
+            } catch (e) {
+                console.error("Erro ao salvar no localStorage", e);
+                alert("Seu navegador está em modo restrito ou janela anônima e não permite salvar dados permanentemente.");
+            }
             renderTasks();
-        };
+        }
 
-        const addTask = () => {
+        function addTask() {
             const text = taskInput.value.trim();
             if (text === '') return;
 
@@ -289,30 +305,36 @@
             setInputsToNow(); 
             taskInput.focus();
             
-            if (newTask.time && Notification.permission === "default") {
-                Notification.requestPermission();
+            // CORREÇÃO: Pede notificação de forma segura sem travar o código
+            if (supportsNotification() && newTask.time && Notification.permission === "default") {
+                try { Notification.requestPermission(); } catch(e) {}
             }
             
+            // Agora o salvamento é garantido!
             saveAndRender();
-        };
+        }
 
-        const toggleTask = (id) => {
+        // Definidas como funções globais para funcionarem no onclick do HTML
+        window.toggleTask = function(id) {
             tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task);
             saveAndRender();
         };
 
-        const deleteTask = (id) => {
+        window.deleteTask = function(id) {
             tasks = tasks.filter(task => task.id !== id);
             saveAndRender();
         };
 
-        const formatarDataBR = (dataISO) => {
+        function formatarDataBR(dataISO) {
             if (!dataISO) return '';
-            const [ano, mes, dia] = dataISO.split('-');
-            return `${dia}/${mes}`;
-        };
+            const partes = dataISO.split('-');
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}`;
+            }
+            return dataISO;
+        }
 
-        const renderTasks = () => {
+        function renderTasks() {
             taskList.innerHTML = '';
 
             const sortedTasks = tasks.sort((a, b) => {
@@ -329,17 +351,13 @@
                 let metaHTML = '';
                 if (task.date || task.time) {
                     metaHTML = `<div class="task-meta">`;
-                    if (task.date) {
-                        metaHTML += `<span>📅 ${formatarDataBR(task.date)}</span>`;
-                    }
-                    if (task.time) {
-                        metaHTML += `<span>⏰ ${task.time}</span>`;
-                    }
+                    if (task.date) metaHTML += `<span>📅 ${formatarDataBR(task.date)}</span>`;
+                    if (task.time) metaHTML += `<span>⏰ ${task.time}</span>`;
                     metaHTML += `</div>`;
                 }
 
                 li.innerHTML = `
-                    <button class="btn-check" onclick="toggleTask('${task.id}')">
+                    <button class="btn-check" onclick="window.toggleTask('${task.id}')">
                         <div class="circle"></div>
                     </button>
                     
@@ -348,7 +366,7 @@
                         ${metaHTML}
                     </div>
                     
-                    <button class="btn-delete" onclick="deleteTask('${task.id}')">
+                    <button class="btn-delete" onclick="window.deleteTask('${task.id}')">
                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                             <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
                             <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
@@ -357,24 +375,33 @@
                 `;
                 taskList.appendChild(li);
             });
-        };
+        }
 
-        // MOTOR DE LEMBRETES (A cada 30 segundos)
         setInterval(() => {
             const now = new Date();
-            const currentDate = now.toISOString().split('T')[0];
-            const currentTime = now.toTimeString().substring(0, 5);
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const currentDate = `${year}-${month}-${day}`;
+            
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${hours}:${minutes}`;
 
             let needsSave = false;
 
             tasks.forEach(task => {
                 if (!task.completed && task.date === currentDate && task.time === currentTime && !task.notified) {
                     
-                    if ("Notification" in window && Notification.permission === "granted") {
-                        new Notification("Lembrete (Roxo): " + task.text, {
-                            body: "Está na hora da sua tarefa!",
-                            icon: "https://cdn-icons-png.flaticon.com/512/825/825590.png"
-                        });
+                    if (supportsNotification() && Notification.permission === "granted") {
+                        try {
+                            new Notification("Lembrete: " + task.text, {
+                                body: "Está na hora da sua tarefa!",
+                                icon: "https://cdn-icons-png.flaticon.com/512/825/825590.png"
+                            });
+                        } catch(e) {
+                            alert("⏰ Lembrete de Tarefa:\n\n" + task.text);
+                        }
                     } else {
                         alert("⏰ Lembrete de Tarefa:\n\n" + task.text);
                     }
@@ -385,12 +412,10 @@
             });
 
             if (needsSave) {
-                // Salva com a nova chave roxa
-                localStorage.setItem('ms_todo_tasks_purple_v2', JSON.stringify(tasks));
+                saveAndRender();
             }
         }, 30000); 
 
-        // Gatilhos
         addBtn.addEventListener('click', addTask);
         taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
 
